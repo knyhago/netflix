@@ -9,27 +9,27 @@ import Parse (parseMovieTitles)
 import Data.Text (Text, pack)
 
 main :: IO ()
-main = do
-    putStrLn "Enter a movie/series name:"
-    userInput <- getLine
+main = do   
 
-    maybeResponse <- fetchData userInput
-    print maybeResponse -- Add this line to print the response
+    maybeResponse <- fetchData --userInput
+    --print maybeResponse -- Add this line to print the response
     case maybeResponse of
         Nothing -> putStrLn "Failed to fetch data or movie not found."
         Just response -> do
             putStrLn "Data fetched!"
             let movieTitles = parseMovieTitles response
-            mapM_ print movieTitles
+            --mapM_ print movieTitles
 
             -- Storing the data in the database
-            withConn "movies2.db" $ \conn -> do
+            withConn "movies3.db" $ \conn -> do
                 createTable conn
-                let movies2 = zipWith (\title rank -> MovieDB { movieId = 0, title = title, rank = rank }) movieTitles [1..]
-                mapM_ (insertMovie conn) movies2
+                let movies3 = zipWith (\title rank -> MovieDB { movieId = 0, title = title, rank = rank }) movieTitles [1..]
+                putStrLn "created tab"
+                mapM_ (insertMovie conn) movies3
+                putStrLn "Inserted"
 
             -- Ask the user for a title to retrieve from the database
             putStrLn "Enter a movie/series title to retrieve details:"
             searchTitle <- getLine
-            retrievedMovies <- withConn "movies2.db" $ \conn -> getMoviesByTitle conn (pack searchTitle)
+            retrievedMovies <- withConn "movies3.db" $ \conn -> getMoviesByTitle conn (pack searchTitle)
             print retrievedMovies

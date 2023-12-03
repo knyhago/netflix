@@ -30,26 +30,27 @@ withConn dbName action = do
     pure r
 
 createTable :: Connection -> IO ()
-createTable conn =
-    execute_ conn "CREATE TABLE IF NOT EXISTS movies2 (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, rank INTEGER)"
+createTable conn = execute_ conn "CREATE TABLE IF NOT EXISTS movies3 (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT UNIQUE, rank INTEGER)"
+
 
 insertMovie :: Connection -> MovieDB -> IO ()
 insertMovie conn movie =
     execute conn insertQuery (title movie, rank movie)
   where
     insertQuery :: Query
-    insertQuery = "INSERT INTO movies2 (title, rank) VALUES (?, ?)"
+    insertQuery = "INSERT OR IGNORE INTO movies3 (title, rank) VALUES (?, ?)"
+
 
 getMoviesByTitle :: Connection -> Text -> IO [MovieDB]
 getMoviesByTitle conn searchTitle =
     query conn selectQuery (Only searchTitle)
   where
     selectQuery :: Query
-    selectQuery = "SELECT * FROM movies2 WHERE title = ?"
+    selectQuery = "SELECT * FROM movies3 WHERE title = ?"
 
 getAllMovies :: Connection -> IO [MovieDB]
 getAllMovies conn  =
     query_ conn selectQuery
   where
     selectQuery :: Query
-    selectQuery = "SELECT * FROM movies2"
+    selectQuery = "SELECT * FROM movies3"
