@@ -5,28 +5,23 @@ module Database
     , withConn
     , createTable
     , insertMovie
-    , getMovies
+    , getAllMovies
+    , getMoviesByTitle
     ) where
 
 import Database.SQLite.Simple
+import Database.SQLite.Simple.FromRow (FromRow(..))
 import Data.Text (Text)
---import Types
 
 data MovieDB = MovieDB
     { movieId :: Int,
       title :: Text,
       rank :: Int
-    } deriving (Show)    
-
-
+    } deriving (Show)
 
 instance FromRow MovieDB where
     fromRow = MovieDB <$> field <*> field <*> field
 
-instance ToRow MovieDB where
-    toRow (MovieDB movieId' title' rank') = toRow (movieId', title', rank')
-
--- Function to connect to the database
 withConn :: String -> (Connection -> IO a) -> IO a
 withConn dbName action = do
     conn <- open dbName
@@ -34,17 +29,27 @@ withConn dbName action = do
     close conn
     pure r
 
--- Function to create a table
 createTable :: Connection -> IO ()
 createTable conn =
-    execute_ conn "CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, rank INTEGER)"
+    execute_ conn "CREATE TABLE IF NOT EXISTS movies2 (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, rank INTEGER)"
 
--- Function to insert a movie into the database
 insertMovie :: Connection -> MovieDB -> IO ()
 insertMovie conn movie =
-    execute conn "INSERT INTO movies (title, rank) VALUES (?, ?)" (title movie, rank movie)
+    execute conn insertQuery (title movie, rank movie)
+  where
+    insertQuery :: Query
+    insertQuery = "INSERT INTO movies2 (title, rank) VALUES (?, ?)"
 
--- Function to retrieve all movies from the database
-getMovies :: Connection -> IO [MovieDB]
-getMovies conn =
-    query_ conn "SELECT * FROM movies"
+getMoviesByTitle :: Connection -> Text -> IO [MovieDB]
+getMoviesByTitle conn searchTitle =
+    query conn selectQuery (Only searchTitle)
+  where
+    selectQuery :: Query
+    selectQuery = "SELECT * FROM movies2 WHERE title = ?"
+
+getAllMovies :: Connection -> IO [MovieDB]
+getAllMovies conn  =
+    query_ conn selectQuery
+  where
+    selectQuery :: Query
+    selectQuery = "SELECT * FROM movies2"

@@ -14,5 +14,5 @@ data Movie = Movie
     { title :: Text
     } deriving (Show)
 
--- Define your Movie data structure for DB
+
 
