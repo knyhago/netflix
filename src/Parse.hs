@@ -1,18 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parse (parseMovieTitles) where
+module Parse (parseMovieTitles, parseMovieDetails) where
 
 import Data.Aeson
 import Data.Text (Text)
-import Types
 
+data MovieDetails = MovieDetails { title :: Text } deriving Show
 
-
-instance FromJSON Movie where
-    parseJSON = withObject "Movie" $ \v -> Movie
+instance FromJSON MovieDetails where
+    parseJSON = withObject "MovieDetails" $ \v -> MovieDetails
         <$> v .: "title" -- Adjust this to match the actual field name in the JSON
 
--- Function to parse the response body into a list of movie titles
+parseMovieDetails :: Value -> MovieDetails
+parseMovieDetails json =
+    case fromJSON json of
+        Success movieDetails -> movieDetails
+        Error err -> error $ "Failed to parse movie details: " ++ err
+
 parseMovieTitles :: Value -> [Text]
 parseMovieTitles json =
     case fromJSON json of
