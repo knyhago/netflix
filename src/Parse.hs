@@ -1,24 +1,38 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parse (parseMovieTitles, parseMovieDetails) where
+module Parse (ParsedMovieDB(..), parseMovieDetails, parseMovieTitles) where
 
 import Data.Aeson
 import Data.Text (Text)
+import Types
+import Data.String (fromString)
 
-data MovieDetails = MovieDetails { title :: Text } deriving Show
+instance FromJSON ParsedMovieDB where
+    parseJSON = withObject "ParsedMovieDB" $ \v ->
+        ParsedMovieDB
+            <$> v .: "id"
+            <*> v .: "title"
+            <*> v .: "year"
+            <*> v .: "rating"
+            <*> v .: "genre"
+            <*> v .: "description"
+            <*> v .: "rank"
 
-instance FromJSON MovieDetails where
-    parseJSON = withObject "MovieDetails" $ \v -> MovieDetails
-        <$> v .: "title" -- Adjust this to match the actual field name in the JSON
-
-parseMovieDetails :: Value -> MovieDetails
+parseMovieDetails :: Value -> [ParsedMovieDB]
 parseMovieDetails json =
     case fromJSON json of
-        Success movieDetails -> movieDetails
-        Error err -> error $ "Failed to parse movie details: " ++ err
+        Success movies -> movies
+        Error _ -> []
 
 parseMovieTitles :: Value -> [Text]
 parseMovieTitles json =
-    case fromJSON json of
-        Success movies -> map title movies
-        Error err -> error $ "Failed to parse movies: " ++ err
+    case json of
+        Array arr -> concatMap extractTitle arr
+        _ -> []
+
+extractTitle :: Value -> [Text]
+extractTitle (Object obj) =
+    case fromJSON (Object obj) of
+        Success movie -> [title movie]
+        Error _ -> []
+extractTitle _ = []

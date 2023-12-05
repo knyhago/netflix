@@ -1,35 +1,48 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Main where
 
-import Database.SQLite.Simple (Connection, open, close)
-import Database (MovieDB(..), withConn, createTable, insertMovie, getMoviesByTitle)
-import Fetch (fetchData)
-import Parse (parseMovieTitles)
+import Database.SQLite.Simple (Connection)
+import qualified Database as DB
+import qualified Parse as P
+import qualified Fetch as F
 import Data.Text (Text, pack)
 
-main :: IO ()
-main = do   
+convertToDBMovie :: P.ParsedMovieDB -> DB.ParsedMovieDB
+convertToDBMovie pMovie = DB.ParsedMovieDB
+    { P.id = P.id pMovie,
+      P.title = P.title pMovie,
+      P.year = P.year pMovie,
+      P.rating = P.rating pMovie,
+      P.genre = P.genre pMovie,
+      P.description = P.description pMovie,
+      P.rank = P.rank pMovie
+    }
 
-    maybeResponse <- fetchData --userInput
-    --print maybeResponse -- Add this line to print the response
+main :: IO ()
+main = do
+    maybeResponse <- F.fetchData
+
     case maybeResponse of
         Nothing -> putStrLn "Failed to fetch data or movie not found."
         Just response -> do
             putStrLn "Data fetched!"
-            let movieTitles = parseMovieTitles response
-            --mapM_ print movieTitles
+            let movieDetails = P.parseMovieDetails response
+                moviesDB = zipWith (\details rank -> details { P.rank = rank }) movieDetails [1..]
 
-            -- Storing the data in the database
-            withConn "movies3.db" $ \conn -> do
-                createTable conn
-                let movies3 = zipWith (\title rank -> MovieDB { movieId = 0, title = title, rank = rank }) movieTitles [1..]
+            DB.withConn "movies3.db" $ \conn -> do
+                DB.createTable conn
                 putStrLn "created tab"
-                mapM_ (insertMovie conn) movies3
+
+                -- Convert P.ParsedMovieDB to DB.ParsedMovieDB
+                let dbMoviesDB = map convertToDBMovie moviesDB
+
+                -- Insert converted movies into the database
+                mapM_ (DB.insertMovie conn) dbMoviesDB
                 putStrLn "Inserted"
 
-            -- Ask the user for a title to retrieve from the database
-            putStrLn "Enter a movie/series title to retrieve details:"
-            searchTitle <- getLine
-            retrievedMovies <- withConn "movies3.db" $ \conn -> getMoviesByTitle conn (pack searchTitle)
-            print retrievedMovies
+
+
+
+                putStrLn "Enter a movie/series title to retrieve details:"
+                searchTitle <- getLine
+                retrievedMovies <- DB.getMoviesByTitle conn (pack searchTitle)
+                print retrievedMovies
