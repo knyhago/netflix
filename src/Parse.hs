@@ -1,11 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parse (ParsedMovieDB(..), parseMovieDetails, parseMovieTitles) where
+module Parse (ParsedMovieDB(..), parseMovieDetails, parseMovieTitles, convertToDBMovie) where
 
 import Data.Aeson
 import Data.Text (Text)
 import Types
+import Database as DB
 import Data.String (fromString)
+
+convertToDBMovie :: ParsedMovieDB -> DB.ParsedMovieDB
+convertToDBMovie pMovie = DB.ParsedMovieDB
+    { Types.id = Types.id pMovie,
+      title = title pMovie,
+      year = year pMovie,
+      rating = rating pMovie,
+      genre = genre pMovie,
+      description = description pMovie,
+      rank = rank pMovie
+    }
+
 
 instance FromJSON ParsedMovieDB where
     parseJSON = withObject "ParsedMovieDB" $ \v ->
