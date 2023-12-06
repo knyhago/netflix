@@ -12,7 +12,7 @@ fetchData = do
     let url = "https://imdb-top-100-movies.p.rapidapi.com/" 
     request <- parseRequest $ "GET " ++ url
     let headers = [ ("X-RapidAPI-Host", "imdb-top-100-movies.p.rapidapi.com")
-                  , ("X-RapidAPI-Key", "e74dadf792mshf170120712f4bf5p17b2dbjsn6a97ac581c70")
+                  , ("X-RapidAPI-Key", "0d529c2252mshb7bbc5138195e9ap11ff14jsnb72b5a22ed07")
                   ]
 
     let request' = setRequestHeaders headers request

@@ -36,14 +36,22 @@ withConn dbName action = do
 
 createTable :: Connection -> IO ()
 createTable conn =
-    execute_ conn "CREATE TABLE IF NOT EXISTS movies3 ( title TEXT UNIQUE, year INTEGER, rating TEXT, genre TEXT, description TEXT, rank INTEGER)"
+    execute_ conn "CREATE TABLE IF NOT EXISTS movies4 ( id TEXT,title TEXT UNIQUE, year INTEGER, rating TEXT, genre TEXT, description TEXT, rank INTEGER)"
 
 insertMovie :: Connection -> ParsedMovieDB -> IO ()
 insertMovie conn movie =
-    execute conn insertQuery (title movie, year movie, rating movie, toTextListField (genre movie), description movie, rank movie)
+    execute conn insertQuery ( Types.id movie
+                             , title movie
+                             , year movie
+                             , rating movie
+                             , toTextListField (genre movie)
+                             , description movie
+                             , rank movie
+                             )
   where
     insertQuery :: Query
-    insertQuery = "INSERT OR IGNORE INTO movies3 (id,title, year, rating, genre, description, rank) VALUES (?, ?, ?, ?, ?, ?,?)"
+    insertQuery = "INSERT OR IGNORE INTO movies4 (id, title, year, rating, genre, description, rank) VALUES (?, ?, ?, ?, ?, ?, ?)"
+
 
 getMoviesByTitle :: Connection -> Text -> IO [ParsedMovieDB]
 getMoviesByTitle conn searchTitle = do
@@ -51,8 +59,8 @@ getMoviesByTitle conn searchTitle = do
     query conn selectQuery (Only wildcardedSearch)
   where
     selectQuery :: Query
-    selectQuery = "SELECT * FROM movies3 WHERE title LIKE ?"
+    selectQuery = "SELECT * FROM movies4 WHERE title LIKE ?"
 
 getAllMovies :: Connection -> IO [ParsedMovieDB]
 getAllMovies conn =
-    query_ conn "SELECT * FROM movies3"
+    query_ conn "SELECT * FROM movies4"

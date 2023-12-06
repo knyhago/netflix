@@ -23,6 +23,3 @@ data ParsedMovieDB = ParsedMovieDB
 --data Movie = Movie
   --  { title :: Text
     --} deriving (Show)
-
-
-
