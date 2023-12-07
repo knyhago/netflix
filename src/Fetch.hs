@@ -18,8 +18,8 @@ fetchData = do
     let request' = setRequestHeaders headers request
 
     response <- httpLBS request'
-    putStrLn "Response status code:"
-    print (getResponseStatusCode response)
+    --putStrLn "Response status code:"
+    --print (getResponseStatusCode response)
 
     -- Decode the response body as JSON
     let responseBody = getResponseBody response

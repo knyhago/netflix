@@ -15,6 +15,7 @@ import Database.SQLite.Simple.FromRow
 import Data.Text (Text, intercalate, strip, splitOn)
 import Types
 import Data.String (fromString)
+import Data.Text (toLower)
 
 instance FromRow ParsedMovieDB where
     fromRow = ParsedMovieDB <$> field <*> field <*> field <*> field <*> (splitGenre <$> field) <*> field <*> field
@@ -52,14 +53,14 @@ insertMovie conn movie =
     insertQuery :: Query
     insertQuery = "INSERT OR IGNORE INTO movies4 (id, title, year, rating, genre, description, rank) VALUES (?, ?, ?, ?, ?, ?, ?)"
 
-
 getMoviesByTitle :: Connection -> Text -> IO [ParsedMovieDB]
 getMoviesByTitle conn searchTitle = do
-    let wildcardedSearch = "%" <> searchTitle <> "%"
+    let wildcardedSearch = "%" <> toLower searchTitle <> "%" -- Convert search to lowercase
     query conn selectQuery (Only wildcardedSearch)
   where
     selectQuery :: Query
-    selectQuery = "SELECT * FROM movies4 WHERE title LIKE ?"
+    selectQuery = "SELECT * FROM movies4 WHERE LOWER(title) LIKE ?" -- Use LOWER function for case-insensitive search
+
 
 getAllMovies :: Connection -> IO [ParsedMovieDB]
 getAllMovies conn =
